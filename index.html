@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <link title="timeline-styles" rel="stylesheet" href="//cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
+    <style>
+.tl-timemarker-text h2.tl-headline {
+  color: #333 !important;
+}
+    </style>
+
+  </head>
+  <body>
+    <div id='form'>
+
+      <label>Api Key: <input id="api_key" name="api_key" type="password"/></label>
+      <label>Project: 
+        <select id="project" style="width: 250px" name="project">
+          <option value=""></option>
+         </select>
+      </label>
+    </div>
+
+    <div id='timeline-embed' style="width: 100%; height: 800px"></div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="//cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
+    <script>
+process_date = function(date_string) {
+  var date_obj = new Date(date_string);
+
+  return {"year": date_obj.getFullYear(),
+          "month": date_obj.getMonth(),
+          "day": date_obj.getDate(),
+          "hour": date_obj.getHours(),
+          "minute": date_obj.getMinutes()}
+}
+
+get_ajax_call = function(project, api_key, events) {
+   var api_call = "https://opendataservices.plan.io/projects/" + project + "/versions.json?key=" + api_key 
+   var ajax_call = jQuery.ajax({"url": api_call, "dataType": "jsonp"})
+   ajax_call.done(function(data) {
+     var new_events = data.versions.filter(function (milestone){
+        now = new Date();
+        twomonthsago = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+        return milestone.project.id == project && milestone.due_date > twomonthsago.toISOString()
+     }).map(function(milestone) {
+        return {"start_date": process_date(milestone.due_date),
+                "end_date": process_date(milestone.due_date),
+                "text": {"headline": milestone.name, "text": milestone.description || milestone.name}}
+     })
+     Array.prototype.push.apply(events, new_events)
+   })
+   return ajax_call
+}
+
+create_timeline = function() {
+  var project = jQuery('#project').val()
+  var api_key = jQuery('#api_key').val()
+  var events = []
+
+  if (project === "all") {
+    var ajax_calls = []
+    jQuery('#project option').each(function() {
+       var project_id = jQuery(this).val()
+       if (project_id !== "all" && project_id !== "") {
+         ajax_calls.push(get_ajax_call(project_id, api_key, events))
+       }
+    })
+  } else {
+    var ajax_calls = [get_ajax_call(project, api_key, events)]
+  }
+
+  jQuery.when.apply(this, ajax_calls).done(function() {
+    var timeline = new TL.Timeline('timeline-embed', {"events": events}, {timenav_height_min: 600});
+  })
+}
+
+update_project_dropdown = function() {
+  var api_key = jQuery('#api_key').val()
+
+  var api_call = "https://opendataservices.plan.io/projects.json?key=" + api_key
+  jQuery.ajax({"url": api_call, "dataType": "jsonp"}).done(function(data) {
+    var project_dropdown = jQuery('#project');
+    project_dropdown.empty();
+    $('<option />', {value: "", text: ""}).appendTo(project_dropdown);
+    $('<option />', {value: "all", text: "all"}).appendTo(project_dropdown);
+    Array.forEach(data.projects, function(item) {
+      $('<option />', {value: item.id, text: item.name}).appendTo(project_dropdown);
+    })
+  })
+}
+
+
+jQuery(function (){
+  update_project_dropdown()
+  jQuery('#api_key').on("change blur", function (){
+    update_project_dropdown()
+  })
+  jQuery('#project').on("change", function (e){
+    create_timeline()  
+  })
+})
+
+
+
+    </script>
+
+  </body>
+</html>
