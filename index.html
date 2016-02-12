@@ -88,7 +88,7 @@ update_project_dropdown = function() {
     project_dropdown.empty();
     $('<option />', {value: "", text: ""}).appendTo(project_dropdown);
     $('<option />', {value: "all", text: "all"}).appendTo(project_dropdown);
-    Array.forEach(data.projects, function(item) {
+    data.projects.forEach(function(item) {
       $('<option />', {value: item.id, text: item.name}).appendTo(project_dropdown);
     })
   })
