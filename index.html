@@ -15,12 +15,10 @@
   <body>
     <div id='form'>
 
-      <label>Api Key: <input id="api_key" name="api_key" type="password"/></label>
-      <label>Project: 
-        <select id="project" style="width: 250px" name="project">
-          <option value=""></option>
-         </select>
-      </label>
+      <label style="position: relative; top: -30px">Api Key:  <input id="api_key" name="api_key" type="password"/></label>
+      <label style="position: relative; top: -30px">Project: </label>
+        <select id="project" multiple style="width: 250px" name="project">
+        </select>
     </div>
 
     <div id='timeline-embed' style="width: 100%; height: 800px"></div>
@@ -59,20 +57,28 @@ get_ajax_call = function(project, api_key, events) {
 
 create_timeline = function() {
   var project = jQuery('#project').val()
+  console.log(project)
   var api_key = jQuery('#api_key').val()
   var events = []
+  var ajax_calls = []
 
-  if (project === "all") {
-    var ajax_calls = []
-    jQuery('#project option').each(function() {
-       var project_id = jQuery(this).val()
-       if (project_id !== "all" && project_id !== "") {
-         ajax_calls.push(get_ajax_call(project_id, api_key, events))
-       }
-    })
-  } else {
-    var ajax_calls = [get_ajax_call(project, api_key, events)]
-  }
+  project.forEach(function(project_id) {
+     if (project_id !== "") {
+       ajax_calls.push(get_ajax_call(project_id, api_key, events))
+     }
+  })
+
+  //if (project === "all") {
+  //  var ajax_calls = []
+  //  jQuery('#project option').each(function() {
+  //     var project_id = jQuery(this).val()
+  //     if (project_id !== "all" && project_id !== "") {
+  //       ajax_calls.push(get_ajax_call(project_id, api_key, events))
+  //     }
+  //  })
+  //} else {
+  //  var ajax_calls = [get_ajax_call(project, api_key, events)]
+  //}
 
   jQuery.when.apply(this, ajax_calls).done(function() {
     var timeline = new TL.Timeline('timeline-embed', {"events": events}, {timenav_height_min: 600});
@@ -86,8 +92,6 @@ update_project_dropdown = function() {
   jQuery.ajax({"url": api_call, "dataType": "jsonp"}).done(function(data) {
     var project_dropdown = jQuery('#project');
     project_dropdown.empty();
-    $('<option />', {value: "", text: ""}).appendTo(project_dropdown);
-    $('<option />', {value: "all", text: "all"}).appendTo(project_dropdown);
     data.projects.forEach(function(item) {
       $('<option />', {value: item.id, text: item.name}).appendTo(project_dropdown);
     })
