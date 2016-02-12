@@ -46,9 +46,12 @@ get_ajax_call = function(project, api_key, events) {
         twomonthsago = new Date(now.getFullYear(), now.getMonth() - 2, 1);
         return milestone.project.id == project && milestone.due_date > twomonthsago.toISOString()
      }).map(function(milestone) {
+        var headline = milestone.name + " (" + milestone.project.name + ")"
+        var text = (milestone.description || "") + ' <a href="https://opendataservices.plan.io/versions/' + milestone.id + '">link to milestone</a>'
+
         return {"start_date": process_date(milestone.due_date),
                 "end_date": process_date(milestone.due_date),
-                "text": {"headline": milestone.name, "text": milestone.description || milestone.name}}
+                "text": {"headline": headline, "text": text}}
      })
      Array.prototype.push.apply(events, new_events)
    })
@@ -57,7 +60,6 @@ get_ajax_call = function(project, api_key, events) {
 
 create_timeline = function() {
   var project = jQuery('#project').val()
-  console.log(project)
   var api_key = jQuery('#api_key').val()
   var events = []
   var ajax_calls = []
@@ -98,13 +100,23 @@ update_project_dropdown = function() {
   })
 }
 
+get_api_cookie = function() {
+  return document.cookie.replace(/(?:(?:^|.*;\s*)api_key\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+}
+
+
 
 jQuery(function (){
+  jQuery('#api_key').val(get_api_cookie())
+
   update_project_dropdown()
   jQuery('#api_key').on("change blur", function (){
+    var api_key = jQuery('#api_key').val()
+    document.cookie = "api_key="+api_key ;
     update_project_dropdown()
   })
   jQuery('#project').on("change", function (e){
+    jQuery('#api_key').val(get_api_cookie())
     create_timeline()  
   })
 })
