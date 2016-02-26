@@ -89,7 +89,7 @@ create_timeline = function() {
 update_project_dropdown = function() {
   var api_key = jQuery('#api_key').val()
 
-  var api_call = "https://opendataservices.plan.io/projects.json?key=" + api_key
+  var api_call = "https://opendataservices.plan.io/projects.json?limit=100&key=" + api_key
   jQuery.ajax({"url": api_call, "dataType": "jsonp"}).done(function(data) {
     var project_dropdown = jQuery('#project');
     project_dropdown.empty();
