@@ -29,9 +29,8 @@
     <script>
 process_date = function(date_string) {
   var date_obj = new Date(date_string);
-
   return {"year": date_obj.getFullYear(),
-          "month": date_obj.getMonth(),
+          "month": date_obj.getMonth() + 1,
           "day": date_obj.getDate(),
           "hour": date_obj.getHours(),
           "minute": date_obj.getMinutes()}
@@ -43,7 +42,7 @@ get_ajax_call = function(project, api_key, events) {
    ajax_call.done(function(data) {
      var new_events = data.versions.filter(function (milestone){
         now = new Date();
-        twomonthsago = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+        twomonthsago = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         return milestone.project.id == project && milestone.due_date > twomonthsago.toISOString()
      }).map(function(milestone) {
         var headline = milestone.name + " (" + milestone.project.name + ")"
